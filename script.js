@@ -117,16 +117,19 @@ function _pollCurrentlyPlaying(callback) {
         return;
       }
 
-      var data = JSON.parse(request.responseText);
-      if (data.item) {
-        trackName = data.item.name;
-        albumName = data.item.album.name;
-        artistName = data.item.artists[0].name;
-        setNowPlayingTrack(data.item);
-        trackPosition = data.progress_ms;
-        trackDuration = data.item.duration_ms;
-        trackPlaying = data.is_playing
-      }
+      try {
+        var data = JSON.parse(request.responseText);
+        if (data.item) {
+          trackName = data.item.name;
+          albumName = data.item.album.name;
+          artistName = data.item.artists[0].name;
+          setNowPlayingTrack(data.item);
+          trackPosition = data.progress_ms;
+          trackDuration = data.item.duration_ms;
+          trackPlaying = data.is_playing
+        }
+      } catch {}
+
       callback();
     }
   ).send();
@@ -236,8 +239,8 @@ function initWebGL(canvas) {
   var downsample = 1; // reduce rendering quality
 
   function fit() {
-    var w = document.body.offsetWidth;
-    var h = document.body.offsetHeight;
+    var w = window.innerWidth;
+    var h = window.innerHeight;
     canvas.width = Math.floor(w / downsample);
     canvas.height = Math.floor(h / downsample);
     gl.viewportWidth = canvas.width;

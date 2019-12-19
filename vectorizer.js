@@ -53,6 +53,8 @@ Vectorizer.prototype.go = function(callback) {
 
 
 Vectorizer.prototype.loadPixels = function(callback) {
+	if (!this.url) return callback(false);
+
 	var _this = this;
 
 	var img = new Image();
