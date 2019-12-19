@@ -10,8 +10,10 @@
 // all the great stuff is @possan's, @plamere just added the bits
 // where we get/show artist images in addition to the cover art
 
+//since the vecterizer stopped working triktron took that code and made it run in the browser
+
 // auth
-var CLIENT_ID = 'cd0cbddc0c604e839784cfb2b59f8273';
+var CLIENT_ID = '2506b7619da84a7285a83834b50c64f4';
 var SCOPES = [
   'user-read-currently-playing',
   'user-read-playback-state',
@@ -116,7 +118,6 @@ function _pollCurrentlyPlaying(callback) {
       }
 
       var data = JSON.parse(request.responseText);
-      console.log('got data', data);
       if (data.item) {
         trackName = data.item.name;
         albumName = data.item.album.name;
@@ -148,7 +149,6 @@ function getUserInformation(callback) {
       return;
     }
 
-    console.log('got data', request.responseText);
     var data = JSON.parse(request.responseText);
     callback(data);
   }).send();
@@ -157,7 +157,6 @@ function getUserInformation(callback) {
 function sendPlayCommand(payload) {
   createAuthorizedRequest('PUT', 'https://api.spotify.com/v1/me/player/play', function(request) {
     if (request.status >= 200 && request.status < 400) {
-      console.log('play command response', request.responseText);
     }
     pollCurrentlyPlaying(1500);
   }).send(JSON.stringify(payload));
@@ -186,12 +185,24 @@ function sendCommand(method, command, querystring) {
 }
 
 function fetchVectors(albumimage, callback) {
-  createRequest('POST', 'https://ilovepolygons.possan.se/convert', function (request) {
-    if (request.status >= 200 && request.status < 400) {
-      nextVectorData = JSON.parse(request.responseText);
+  var v = new Vectorizer();
+  v.url = albumimage;
+  v.cutoff = 10000;
+  v.threshold = 20;
+  v.go(function() {
+    if (v.error) {
+      console.log(v.error)
+    } else {
+      nextVectorData = {
+        url: v.url,
+        cutoff: v.cutoff,
+        width: v.width,
+        height: v.height,
+        tris: v.tris
+      };
       callback();
     }
-  }).send('url=' + encodeURIComponent(albumimage) + '&cutoff=10000&threshold=20');
+  });
 }
 
 function sendPlayContext(uri, offset) {
@@ -632,7 +643,7 @@ function msPerImage() {
         // plus one to wrap around to get back to the
         // album art
          imageDur = trackDuration / (imageList.length + 1);
-    } 
+    }
     return Math.max(fadeinTime + fadeinTime + 3, imageDur);
 }
 
@@ -701,19 +712,6 @@ function initUI() {
 function initKeyboard() {
   window.addEventListener('keyup', function (event) {
     console.log('key up', event.keyCode);
-
-    // some hidden presets '1' .. '0'
-    if (event.keyCode == 49) { sendPlayContext('spotify:album:2gaw3G7HBQuz93N8X89JIA', 1); }
-    if (event.keyCode == 50) { sendPlayContext('spotify:album:2KWlNb50pLNM11pGqqVdSX'); }
-    if (event.keyCode == 51) { sendPlayContext('spotify:album:7xrc6SpiFhcgBaLYbqfB7k', 1); }
-    if (event.keyCode == 52) { sendPlayContext('spotify:album:64XdBdXNdguPHzBg8bdk5A'); }
-    if (event.keyCode == 53) { sendPlayContext('spotify:album:64XidJaSHIS1XMb4Po77b1', 9); }
-    if (event.keyCode == 54) { sendPlayContext('spotify:album:4wJmWEuo2ezowJeJVdQWYS', 1); }
-    if (event.keyCode == 55) { sendPlayContext('spotify:album:5uTGqtnYpSRYiFTEuQcmNE', 0); }
-    if (event.keyCode == 56) { sendPlayContext('spotify:album:4QNlqYSMYCPiKZfzUfH7jK', 1); }
-    if (event.keyCode == 57) { sendPlayContext('spotify:album:29JfxOC3yMXwy3KlX8WFUQ', 1); }
-    if (event.keyCode == 48) { sendPlayContext('spotify:album:68zh8sbZPMeJb7GnqomRJS', 0); }
-
     // left
     if (event.keyCode == 37) {
       sendCommand('POST', 'previous');
