@@ -509,7 +509,14 @@ function drawScene() {
 }
 
 function tick() {
-  requestAnimFrame(tick);
+  
+  
+  setTimeout( function() {
+
+        requestAnimFrame(tick);
+
+    }, 1000 / 30 );
+  
   gl.uniform1f(shaderProgram.timeUniform, globalTime);
 
   var progress = -2.0;
